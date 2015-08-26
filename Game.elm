@@ -2,29 +2,23 @@ module Game where
 
 import Graphics.Element exposing (Element)
 import Graphics.Collage exposing (..)
-import Color exposing (..)
 import Text
 
-import Entity exposing (Entity)
+import World exposing (World)
+import Entity
 
-type alias World = { character : Entity, goal: Entity, obstacles: List Entity }
-
-init: World
-init =
-  { character = (-100, 100)
-  , goal = (100, -100)
-  , obstacles = [(-100, 0), (0, -100)]
-  }
-
-update : { x : Int, y : Int } -> World -> World
-update arrows world =
-  { world | character <- Entity.update arrows world.character }
+init = World.init
+update = World.update
 
 view : World -> Element
 view world =
-  if | gameWon world -> collage 300 300 [ viewWorld world |> alpha 0.5, victoryText ]
-     | gameLost world -> collage 300 300 [ viewWorld world |> alpha 0.5, failureText ]
-     | otherwise -> collage 300 300 [ viewWorld world ]
+  if | gameWon world -> viewport [ World.viewFaded world, victoryText ]
+     | gameLost world -> viewport [ World.viewFaded world, failureText ]
+     | otherwise -> viewport [ World.view world ]
+
+viewport : List Form -> Element
+viewport forms =
+  collage 300 300 forms
 
 gameLost : World -> Bool
 gameLost world =
@@ -33,18 +27,6 @@ gameLost world =
 gameWon : World -> Bool
 gameWon world =
   Entity.haveCollided world.character world.goal
-
-viewWorld : World -> Form
-viewWorld world =
-  group
-  [ background
-  , Entity.viewCharacter world.character
-  , Entity.viewObstacles world.obstacles
-  , Entity.viewGoal world.goal
-  ]
-
-background : Form
-background = rect 300 300 |> filled green
 
 victoryText : Form
 victoryText =
